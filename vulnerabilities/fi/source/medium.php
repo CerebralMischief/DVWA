@@ -1,10 +1,10 @@
 <?php
 
-	$file = $_GET['page']; // The page we wish to display 
+// The page we wish to display
+$file = $_GET[ 'page' ];
 
-	// Bad input validation
-	$file = str_replace("http://", "", $file);
-	$file = str_replace("https://", "", $file);		
-
+// Input validation
+$file = str_replace( array( "http://", "https://" ), "", $file );
+$file = str_replace( array( "../", "..\"" ), "", $file );
 
 ?>

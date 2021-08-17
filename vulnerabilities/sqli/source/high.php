@@ -1,33 +1,24 @@
-<?php	
+<?php
 
-if (isset($_GET['Submit'])) {
+if( isset( $_SESSION [ 'id' ] ) ) {
+	// Get input
+	$id = $_SESSION[ 'id' ];
 
-	// Retrieve data
+	// Check database
+	$query  = "SELECT first_name, last_name FROM users WHERE user_id = '$id' LIMIT 1;";
+	$result = mysqli_query($GLOBALS["___mysqli_ston"], $query ) or die( '<pre>Something went wrong.</pre>' );
 
-	$id = $_GET['id'];
-	$id = stripslashes($id);
-	$id = mysql_real_escape_string($id);
+	// Get results
+	while( $row = mysqli_fetch_assoc( $result ) ) {
+		// Get values
+		$first = $row["first_name"];
+		$last  = $row["last_name"];
 
-	if (is_numeric($id)){
-
-		$getid = "SELECT first_name, last_name FROM users WHERE user_id = '$id'";
-		$result = mysql_query($getid) or die('<pre>' . mysql_error() . '</pre>' );
-
-		$num = mysql_numrows($result);
-
-		$i=0;
-
-		while ($i < $num) {
-
-			$first = mysql_result($result,$i,"first_name");
-			$last = mysql_result($result,$i,"last_name");
-			
-			$html .= '<pre>';
-			$html .= 'ID: ' . $id . '<br>First name: ' . $first . '<br>Surname: ' . $last;
-			$html .= '</pre>';
-
-			$i++;
-		}
+		// Feedback for end user
+		$html .= "<pre>ID: {$id}<br />First name: {$first}<br />Surname: {$last}</pre>";
 	}
+
+	((is_null($___mysqli_res = mysqli_close($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);		
 }
+
 ?>

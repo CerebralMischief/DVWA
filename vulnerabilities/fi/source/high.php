@@ -1,11 +1,13 @@
 <?php
-		
-	$file = $_GET['page']; //The page we wish to display 
 
-	// Only allow include.php
-	if ( $file != "include.php" ) {
-		echo "ERROR: File not found!";
-		exit;
-	}
-		
+// The page we wish to display
+$file = $_GET[ 'page' ];
+
+// Input validation
+if( !fnmatch( "file*", $file ) && $file != "include.php" ) {
+	// This isn't the page we want!
+	echo "ERROR: File not found!";
+	exit;
+}
+
 ?>

@@ -1,33 +1,33 @@
-<?php	
+<?php
 
-if(isset($_GET['Submit'])){
+if( isset( $_COOKIE[ 'id' ] ) ) {
+	// Get input
+	$id = $_COOKIE[ 'id' ];
 
-	// Retrieve data
+	// Check database
+	$getid  = "SELECT first_name, last_name FROM users WHERE user_id = '$id' LIMIT 1;";
+	$result = mysqli_query($GLOBALS["___mysqli_ston"],  $getid ); // Removed 'or die' to suppress mysql errors
 
-	$id = $_GET['id'];
-	$id = stripslashes($id);
-	$id = mysql_real_escape_string($id);
-
-	if (is_numeric($id)) {
-
-		$getid = "SELECT first_name, last_name FROM users WHERE user_id = '$id'";
-		$result = mysql_query($getid); // Removed 'or die' to suppres mysql errors
-
-		$num = @mysql_numrows($result); // The '@' character suppresses errors making the injection 'blind'
-
-		$i=0;
-
-		while ($i < $num) {
-
-			$first = mysql_result($result,$i,"first_name");
-			$last = mysql_result($result,$i,"last_name");
-			
-			$html .= '<pre>';
-			$html .= 'ID: ' . $id . '<br>First name: ' . $first . '<br>Surname: ' . $last;
-			$html .= '</pre>';
-
-			$i++;
-		}
+	// Get results
+	$num = @mysqli_num_rows( $result ); // The '@' character suppresses errors
+	if( $num > 0 ) {
+		// Feedback for end user
+		$html .= '<pre>User ID exists in the database.</pre>';
 	}
+	else {
+		// Might sleep a random amount
+		if( rand( 0, 5 ) == 3 ) {
+			sleep( rand( 2, 4 ) );
+		}
+
+		// User wasn't found, so the page wasn't!
+		header( $_SERVER[ 'SERVER_PROTOCOL' ] . ' 404 Not Found' );
+
+		// Feedback for end user
+		$html .= '<pre>User ID is MISSING from the database.</pre>';
+	}
+
+	((is_null($___mysqli_res = mysqli_close($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
 }
+
 ?>

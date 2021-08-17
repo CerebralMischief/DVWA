@@ -1,44 +1,55 @@
 <?php
-if( isset( $_POST['Change'] ) && ( $_POST['step'] == '1' ) ) {
-	
+
+if( isset( $_POST[ 'Change' ] ) ) {
+	// Hide the CAPTCHA form
 	$hide_form = true;
-	
-        $pass_new = $_POST['password_new'];
-	$pass_new = stripslashes( $pass_new );
-	$pass_new = mysql_real_escape_string( $pass_new );
-	$pass_new = md5( $pass_new );
 
-        $pass_conf = $_POST['password_conf'];
-        $pass_conf = stripslashes( $pass_conf );
-	$pass_conf = mysql_real_escape_string( $pass_conf );
-	$pass_conf = md5( $pass_conf );
-	
-        $resp = recaptcha_check_answer ($_DVWA['recaptcha_private_key'],
-		$_SERVER["REMOTE_ADDR"],
-		$_POST["recaptcha_challenge_field"],
-		$_POST["recaptcha_response_field"]);
+	// Get input
+	$pass_new  = $_POST[ 'password_new' ];
+	$pass_conf = $_POST[ 'password_conf' ];
 
-	if (!$resp->is_valid) {
-		// What happens when the CAPTCHA was entered incorrectly
-		$html .= "<pre><br />The CAPTCHA was incorrect. Please try again.</pre>";
-		$hide_form = false;
-		return;	
+	// Check CAPTCHA from 3rd party
+	$resp = recaptcha_check_answer(
+		$_DVWA[ 'recaptcha_private_key' ],
+		$_POST['g-recaptcha-response']
+	);
+
+	if (
+		$resp || 
+		(
+			$_POST[ 'g-recaptcha-response' ] == 'hidd3n_valu3'
+			&& $_SERVER[ 'HTTP_USER_AGENT' ] == 'reCAPTCHA'
+		)
+	){
+		// CAPTCHA was correct. Do both new passwords match?
+		if ($pass_new == $pass_conf) {
+			$pass_new = ((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $pass_new ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
+			$pass_new = md5( $pass_new );
+
+			// Update database
+			$insert = "UPDATE `users` SET password = '$pass_new' WHERE user = '" . dvwaCurrentUser() . "' LIMIT 1;";
+			$result = mysqli_query($GLOBALS["___mysqli_ston"],  $insert ) or die( '<pre>' . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)) . '</pre>' );
+
+			// Feedback for user
+			$html .= "<pre>Password Changed.</pre>";
+
+		} else {
+			// Ops. Password mismatch
+			$html     .= "<pre>Both passwords must match.</pre>";
+			$hide_form = false;
+		}
+
 	} else {
-                // Check that the current password is correct
-		$qry = "SELECT password FROM `users` WHERE user='admin' AND password='$pass_curr';";
-		$result = mysql_query($qry) or die('<pre>' . mysql_error() . '</pre>' );
-                
-                if (($pass_new == $pass_conf)  && ( $result && mysql_num_rows( $result ) == 1 )){
-                       $insert="UPDATE `users` SET password = '$pass_new' WHERE user = '" . dvwaCurrentUser() . "';";
-                       $result=mysql_query($insert) or die('<pre>' . mysql_error() . '</pre>' );
-
-                       $html .= "<pre> Password Changed </pre>";
-                       mysql_close();
-                }
-
-                else{
-                       $html .= "<pre> Either your current password is incorrect or the new passwords did not match. Please try again. </pre>";
-                }
+		// What happens when the CAPTCHA was entered incorrectly
+		$html     .= "<pre><br />The CAPTCHA was incorrect. Please try again.</pre>";
+		$hide_form = false;
+		return;
 	}
+
+	((is_null($___mysqli_res = mysqli_close($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
 }
+
+// Generate Anti-CSRF token
+generateSessionToken();
+
 ?>

@@ -1,29 +1,26 @@
 <?php
 
-if (isset($_GET['Submit'])) {
+if( isset( $_POST[ 'Submit' ]  ) ) {
+	// Get input
+	$id = $_POST[ 'id' ];
+	$id = ((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $id ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
 
-	// Retrieve data
+	// Check database
+	$getid  = "SELECT first_name, last_name FROM users WHERE user_id = $id;";
+	$result = mysqli_query($GLOBALS["___mysqli_ston"],  $getid ); // Removed 'or die' to suppress mysql errors
 
-	$id = $_GET['id'];
-	$id = mysql_real_escape_string($id);
-
-	$getid = "SELECT first_name, last_name FROM users WHERE user_id = $id";
-	$result = mysql_query($getid); // Removed 'or die' to suppres mysql errors
-	
-	$num = @mysql_numrows($result); // The '@' character suppresses errors making the injection 'blind'
-
-	$i=0;
-
-	while ($i < $num) {
-
-		$first=mysql_result($result,$i,"first_name");
-		$last=mysql_result($result,$i,"last_name");
-		
-		$html .= '<pre>';
-		$html .= 'ID: ' . $id . '<br>First name: ' . $first . '<br>Surname: ' . $last;
-		$html .= '</pre>';
-
-		$i++;
+	// Get results
+	$num = @mysqli_num_rows( $result ); // The '@' character suppresses errors
+	if( $num > 0 ) {
+		// Feedback for end user
+		$html .= '<pre>User ID exists in the database.</pre>';
 	}
+	else {
+		// Feedback for end user
+		$html .= '<pre>User ID is MISSING from the database.</pre>';
+	}
+
+	//mysql_close();
 }
+
 ?>

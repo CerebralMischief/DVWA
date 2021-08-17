@@ -1,35 +1,35 @@
 <?php
-			
-	if (isset($_GET['Change'])) {
-	
-		// Turn requests into variables
-		$pass_curr = $_GET['password_current'];
-		$pass_new = $_GET['password_new'];
-		$pass_conf = $_GET['password_conf'];
 
-		// Sanitise current password input
-		$pass_curr = stripslashes( $pass_curr );
-		$pass_curr = mysql_real_escape_string( $pass_curr );
-		$pass_curr = md5( $pass_curr );
-		
-		// Check that the current password is correct
-		$qry = "SELECT password FROM `users` WHERE user='admin' AND password='$pass_curr';";
-		$result = mysql_query($qry) or die('<pre>' . mysql_error() . '</pre>' );
+if( isset( $_GET[ 'Change' ] ) ) {
+	// Check Anti-CSRF token
+	checkToken( $_REQUEST[ 'user_token' ], $_SESSION[ 'session_token' ], 'index.php' );
 
-		if (($pass_new == $pass_conf) && ( $result && mysql_num_rows( $result ) == 1 )){
-			$pass_new = mysql_real_escape_string($pass_new);
-			$pass_new = md5($pass_new);
+	// Get input
+	$pass_new  = $_GET[ 'password_new' ];
+	$pass_conf = $_GET[ 'password_conf' ];
 
-			$insert="UPDATE `users` SET password = '$pass_new' WHERE user = 'admin';";
-			$result=mysql_query($insert) or die('<pre>' . mysql_error() . '</pre>' );
-						
-			$html .= "<pre> Password Changed </pre>";		
-			mysql_close();
-		}
-	
-		else{		
-			$html .= "<pre> Passwords did not match or current password incorrect. </pre>";			
-		}
+	// Do the passwords match?
+	if( $pass_new == $pass_conf ) {
+		// They do!
+		$pass_new = ((isset($GLOBALS["___mysqli_ston"]) && is_object($GLOBALS["___mysqli_ston"])) ? mysqli_real_escape_string($GLOBALS["___mysqli_ston"],  $pass_new ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
+		$pass_new = md5( $pass_new );
 
+		// Update the database
+		$insert = "UPDATE `users` SET password = '$pass_new' WHERE user = '" . dvwaCurrentUser() . "';";
+		$result = mysqli_query($GLOBALS["___mysqli_ston"],  $insert ) or die( '<pre>' . ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)) . '</pre>' );
+
+		// Feedback for the user
+		$html .= "<pre>Password Changed.</pre>";
 	}
+	else {
+		// Issue with passwords matching
+		$html .= "<pre>Passwords did not match.</pre>";
+	}
+
+	((is_null($___mysqli_res = mysqli_close($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
+}
+
+// Generate Anti-CSRF token
+generateSessionToken();
+
 ?>

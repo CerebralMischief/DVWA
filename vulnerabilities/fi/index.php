@@ -1,38 +1,43 @@
 <?php
 
 define( 'DVWA_WEB_PAGE_TO_ROOT', '../../' );
-require_once DVWA_WEB_PAGE_TO_ROOT.'dvwa/includes/dvwaPage.inc.php';
+require_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/dvwaPage.inc.php';
 
 dvwaPageStartup( array( 'authenticated', 'phpids' ) );
 
 $page = dvwaPageNewGrab();
-$page[ 'title' ] .= $page[ 'title_separator' ].'Vulnerability: File Inclusion';
+$page[ 'title' ]   = 'Vulnerability: File Inclusion' . $page[ 'title_separator' ].$page[ 'title' ];
 $page[ 'page_id' ] = 'fi';
+$page[ 'help_button' ]   = 'fi';
+$page[ 'source_button' ] = 'fi';
 
 dvwaDatabaseConnect();
 
 $vulnerabilityFile = '';
-switch( $_COOKIE['security'] ) {
+switch( $_COOKIE[ 'security' ] ) {
 	case 'low':
 		$vulnerabilityFile = 'low.php';
 		break;
-
 	case 'medium':
 		$vulnerabilityFile = 'medium.php';
 		break;
-
 	case 'high':
-	default:
 		$vulnerabilityFile = 'high.php';
+		break;
+	default:
+		$vulnerabilityFile = 'impossible.php';
 		break;
 }
 
-require_once DVWA_WEB_PAGE_TO_ROOT."vulnerabilities/fi/source/{$vulnerabilityFile}";
+require_once DVWA_WEB_PAGE_TO_ROOT . "vulnerabilities/fi/source/{$vulnerabilityFile}";
 
-$page[ 'help_button' ] = 'fi';
-$page[ 'source_button' ] = 'fi';
-
-include($file);
+// if( count( $_GET ) )
+if( isset( $file ) )
+	include( $file );
+else {
+	header( 'Location:?page=include.php' );
+	exit;
+}
 
 dvwaHtmlEcho( $page );
 
